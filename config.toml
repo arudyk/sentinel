@@ -1,0 +1,21 @@
+[motor]
+in1 = 22          # Right motor dir A (OUT1/OUT2)
+in2 = 23          # Right motor dir B (OUT1/OUT2)
+ena = 18          # Right motor PWM (PWM0-capable)
+in3 = 27          # Left motor dir A (OUT3/OUT4)
+in4 = 17          # Left motor dir B (OUT3/OUT4)
+enb = 19          # Left motor PWM (PWM1-capable)
+default_speed = 75
+pwm_frequency = 1000
+
+[camera]
+width = 640
+height = 480
+framerate = 15
+jpeg_quality = 70
+rotation = 180
+
+[server]
+host = "0.0.0.0"
+port = 8080
+debug = false

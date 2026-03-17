@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sentinel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sentinel</h1>
+    <div id="status-bar">
+      <span id="status-action">idle</span>
+      <span id="status-speed">75%</span>
+      <span id="status-camera" class="indicator" title="Camera">●</span>
+      <span id="status-battery" class="battery" title="Battery">–</span>
+      <span id="status-uptime">0s</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="stream-container">
+      <img id="stream" src="/stream" alt="Camera stream" draggable="false">
+      <div id="stream-overlay" class="hidden">No signal</div>
+    </section>
+
+    <section class="controls">
+      <div class="dpad">
+        <button class="dpad-btn dpad-up"    data-action="forward"    aria-label="Forward"><span class="arrow">▲</span><kbd>W</kbd></button>
+        <button class="dpad-btn dpad-left"  data-action="turn_left"  aria-label="Turn left"><span class="arrow">◀</span><kbd>A</kbd></button>
+        <button class="dpad-btn dpad-stop"  data-action="stop"       aria-label="Stop">■</button>
+        <button class="dpad-btn dpad-right" data-action="turn_right" aria-label="Turn right"><span class="arrow">▶</span><kbd>D</kbd></button>
+        <button class="dpad-btn dpad-down"  data-action="reverse"    aria-label="Reverse"><span class="arrow">▼</span><kbd>S</kbd></button>
+      </div>
+
+      <div class="speed-control">
+        <label for="speed-slider">Speed</label>
+        <input id="speed-slider" type="range" min="0" max="100" value="75" step="5">
+        <span id="speed-value">75%</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

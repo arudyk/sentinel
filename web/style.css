@@ -1,0 +1,269 @@
+/* Sentinel — mobile-first styles */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --accent: #238636;
+  --accent-hover: #2ea043;
+  --danger: #da3633;
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --btn-size: 72px;
+  --btn-radius: 8px;
+  --header-h: 44px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+
+header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+#status-action {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.indicator { color: var(--danger); }
+.indicator.ok { color: var(--accent); }
+
+.battery { font-variant-numeric: tabular-nums; }
+.battery.charging { color: #e3b341; }
+.battery.low { color: var(--danger); }
+
+/* ── Main layout ──
+   Portrait:  stream → controls stacked vertically, both centered
+   Landscape / desktop: stream on left, controls on right
+── */
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  height: calc(100dvh - var(--header-h));
+  padding: 0.75rem;
+}
+
+/* ── Stream ── */
+
+.stream-container {
+  position: relative;
+  /* Fill available width; cap so it never dwarfs controls on very wide screens */
+  width: 100%;
+  max-width: min(100%, calc((100dvh - var(--header-h) - 260px) * 4 / 3));
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 1;
+}
+
+#stream {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+#stream-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.75);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+.hidden { display: none !important; }
+
+/* ── Controls ── */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  flex-shrink: 0;
+}
+
+/* ── D-pad ── */
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, var(--btn-size));
+  grid-template-rows: repeat(3, var(--btn-size));
+  gap: 6px;
+}
+
+.dpad-btn {
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--btn-radius);
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.08s, transform 0.05s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.dpad-btn .arrow {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.dpad-btn kbd {
+  font-size: 0.6rem;
+  font-family: inherit;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.dpad-btn:active,
+.dpad-btn.active {
+  background: var(--accent);
+  border-color: var(--accent-hover);
+  transform: scale(0.93);
+}
+
+.dpad-btn.active kbd,
+.dpad-btn:active kbd {
+  color: rgba(255,255,255,0.6);
+}
+
+.dpad-stop {
+  border-color: var(--danger);
+  font-size: 1.1rem;
+}
+
+.dpad-stop:active,
+.dpad-stop.active {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Grid placement */
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-stop  { grid-column: 2; grid-row: 2; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+/* ── Speed slider ── */
+
+.speed-control {
+  width: calc(var(--btn-size) * 3 + 12px);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.speed-control label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  min-width: 38px;
+}
+
+#speed-slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#speed-value {
+  font-size: 0.78rem;
+  min-width: 32px;
+  text-align: right;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Landscape: stream left, controls right ── */
+
+@media (orientation: landscape) {
+  main {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .stream-container {
+    /* In landscape: fill remaining height, let width follow aspect ratio */
+    width: auto;
+    max-width: none;
+    height: 100%;
+    max-height: calc(100dvh - var(--header-h) - 1rem);
+    aspect-ratio: 4 / 3;
+  }
+
+  .controls {
+    flex-shrink: 0;
+  }
+}
+
+/* ── Large desktop: cap stream width ── */
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .stream-container {
+    max-height: calc(100dvh - var(--header-h) - 2rem);
+  }
+}

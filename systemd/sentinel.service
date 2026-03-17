@@ -1,0 +1,22 @@
+[Unit]
+Description=Sentinel Home Sentry Bot
+After=network-online.target pisugar-server.service
+Wants=network-online.target pisugar-server.service
+
+[Service]
+Type=simple
+User=sentinel
+Group=sentinel
+WorkingDirectory=/home/sentinel/sentinel
+ExecStart=/home/sentinel/sentinel/venv/bin/python -m sentinel.main
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sentinel
+
+# Safety: run GPIO cleanup on exit
+ExecStopPost=/home/sentinel/sentinel/venv/bin/python -c "import RPi.GPIO as GPIO; GPIO.cleanup()" 2>/dev/null || true
+
+[Install]
+WantedBy=multi-user.target
