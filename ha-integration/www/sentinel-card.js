@@ -199,11 +199,11 @@ class SentinelCard extends HTMLElement {
 
         <div class="controls">
           <div class="dpad">
-            <button class="btn up"    data-action="forward">    ▲<kbd>W</kbd></button>
-            <button class="btn left"  data-action="turn_left">  ◀<kbd>A</kbd></button>
+            <button class="btn up"    data-action="forward">    ▲<kbd>↑</kbd></button>
+            <button class="btn left"  data-action="turn_left">  ◀<kbd>←</kbd></button>
             <button class="btn stop"  data-action="stop">       ■</button>
-            <button class="btn right" data-action="turn_right"> ▶<kbd>D</kbd></button>
-            <button class="btn down"  data-action="reverse">    ▼<kbd>S</kbd></button>
+            <button class="btn right" data-action="turn_right"> ▶<kbd>→</kbd></button>
+            <button class="btn down"  data-action="reverse">    ▼<kbd>↓</kbd></button>
           </div>
 
           <div class="speed-row">
@@ -258,8 +258,8 @@ class SentinelCard extends HTMLElement {
 
   _onKeyDown(e) {
     if (e.repeat) return;
-    const map = { w: 'forward', a: 'turn_left', s: 'reverse', d: 'turn_right', ' ': 'stop' };
-    const action = map[e.key.toLowerCase()];
+    const map = { ArrowUp: 'forward', ArrowLeft: 'turn_left', ArrowDown: 'reverse', ArrowRight: 'turn_right', ' ': 'stop' };
+    const action = map[e.key];
     if (!action) return;
     e.preventDefault();
     this._press(action);
@@ -268,8 +268,8 @@ class SentinelCard extends HTMLElement {
   }
 
   _onKeyUp(e) {
-    const map = { w: 'forward', a: 'turn_left', s: 'reverse', d: 'turn_right' };
-    const action = map[e.key.toLowerCase()];
+    const map = { ArrowUp: 'forward', ArrowLeft: 'turn_left', ArrowDown: 'reverse', ArrowRight: 'turn_right' };
+    const action = map[e.key];
     if (!action) return;
     this._press('stop');
     const btn = this.shadowRoot.querySelector(`[data-action="${action}"]`);
