@@ -7,6 +7,7 @@ from datetime import timedelta
 
 import aiohttp
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -45,10 +46,13 @@ class SentinelCoordinator(DataUpdateCoordinator):
         payload: dict = {"action": action}
         if speed is not None:
             payload["speed"] = speed
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{self.base_url}/command",
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=5),
-            ) as resp:
-                resp.raise_for_status()
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.base_url}/command",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    resp.raise_for_status()
+        except Exception as err:
+            raise HomeAssistantError(f"Sentinel is unavailable: {err}") from err
