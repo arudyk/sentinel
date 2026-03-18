@@ -141,10 +141,10 @@ debug = false
 
 | Key | Action |
 |-----|--------|
-| `W` | Forward |
-| `S` | Reverse |
-| `A` | Turn left |
-| `D` | Turn right |
+| `↑` | Forward |
+| `↓` | Reverse |
+| `←` | Turn left |
+| `→` | Turn right |
 | `Space` | Stop |
 
 Hold the key to keep moving — releasing stops the robot.
