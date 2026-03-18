@@ -199,6 +199,8 @@ Valid actions: `forward`, `reverse`, `turn_left`, `turn_right`, `stop`, `brake`
 
 The `ha-integration/` directory contains a custom HA integration that exposes Sentinel as a first-class Home Assistant device. This is the recommended way to control the robot remotely — all traffic is proxied through HA so no direct network access to the Pi is required.
 
+![Sentinel Lovelace card](docs/ha-card-screenshot.png)
+
 ### What it provides
 
 | Entity | Description |
