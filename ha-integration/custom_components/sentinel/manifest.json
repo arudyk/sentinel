@@ -1,0 +1,11 @@
+{
+  "domain": "sentinel",
+  "name": "Sentinel",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://github.com/arudyk/sentinel",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@arudyk"],
+  "iot_class": "local_polling"
+}

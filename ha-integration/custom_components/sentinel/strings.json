@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Sentinel",
+        "data": {
+          "host": "Host (IP or hostname)",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Sentinel. Check the host and port and make sure the robot is on."
+    },
+    "abort": {
+      "already_configured": "Sentinel is already configured."
+    }
+  }
+}
