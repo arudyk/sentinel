@@ -1,6 +1,6 @@
 # Sentinel — Home Sentry Bot
 
-A tracked robot controlled from a web app served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera, battery powered by PiSugar 3, accessible on the local network and remotely via Tailscale.
+A tracked robot controlled via Home Assistant or a local web app, served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera, battery powered by PiSugar 3.
 
 ---
 
@@ -14,7 +14,6 @@ A tracked robot controlled from a web app served by a Raspberry Pi Zero 2 W. Two
 | Motor driver | L298N H-bridge |
 | Camera | Pi Camera v1 (OV5647) |
 | Battery | PiSugar 3 |
-| Remote access | Tailscale |
 
 ---
 
@@ -74,9 +73,8 @@ bash setup.sh
 |--------|-----|
 | Local network | `http://192.168.1.138:8080` |
 | mDNS hostname | `http://sentinel.local:8080` |
-| Remote (Tailscale) | `http://<tailscale-ip>:8080` |
 
-See [`docs/tailscale.md`](docs/tailscale.md) for remote access setup.
+For remote access, use the [Home Assistant integration](ha-integration/) — the HA camera proxy and controls work from anywhere HA is reachable.
 
 ### Managing the service
 
@@ -226,6 +224,5 @@ sentinel/
 │
 └── docs/
     ├── wiring.md               Detailed wiring reference
-    ├── tailscale.md            Remote access setup
     └── first-boot.md           SD card and headless setup
 ```
