@@ -244,7 +244,7 @@ class SentinelCard extends HTMLElement {
       const v = parseInt(slider.value);
       this.shadowRoot.getElementById('speed-val').textContent = `${v}%`;
       this._hass.callService('number', 'set_value', {
-        entity_id: this._e('number', 'speed_setting'),
+        entity_id: this._e('number', 'speed'),
         value: v,
       });
     });
@@ -303,7 +303,7 @@ class SentinelCard extends HTMLElement {
     }
 
     // Speed slider — sync from HA state without fighting an active drag
-    const speedState = this._hass.states[this._e('number', 'speed_setting')];
+    const speedState = this._hass.states[this._e('number', 'speed')];
     if (speedState && speedState.state !== 'unavailable') {
       const slider = this.shadowRoot.getElementById('speed-slider');
       if (slider && !slider.matches(':active')) {
