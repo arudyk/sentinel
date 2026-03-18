@@ -37,9 +37,16 @@ class SentinelCard extends HTMLElement {
     return `${domain}.${this._config.entity_prefix}_${name}`;
   }
 
-  _build() {
-    const streamUrl = `/api/camera_proxy_stream/${this._e('camera', 'camera')}`;
+  _streamUrl() {
+    if (this._config.stream_url) return this._config.stream_url;
+    const entityId = this._e('camera', 'camera');
+    const state = this._hass && this._hass.states[entityId];
+    const token = state && state.attributes && state.attributes.access_token;
+    const base = `/api/camera_proxy_stream/${entityId}`;
+    return token ? `${base}?token=${token}` : base;
+  }
 
+  _build() {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -183,7 +190,7 @@ class SentinelCard extends HTMLElement {
 
       <div class="card">
         <div class="stream-wrap">
-          <img id="stream" src="${streamUrl}" alt="Camera">
+          <img id="stream" alt="Camera">
           <div class="status-bar">
             <span id="status-action">idle</span>
             <span id="status-battery" class="battery">–</span>
@@ -207,6 +214,13 @@ class SentinelCard extends HTMLElement {
         </div>
       </div>
     `;
+
+    // Stream: set initial src + reconnect on error
+    const imgEl = this.shadowRoot.getElementById('stream');
+    imgEl.src = this._streamUrl();
+    imgEl.addEventListener('error', () => {
+      setTimeout(() => { imgEl.src = this._streamUrl(); }, 2000);
+    });
 
     // Hold-to-move on D-pad buttons
     this.shadowRoot.querySelectorAll('[data-action]').forEach(btn => {
@@ -264,6 +278,15 @@ class SentinelCard extends HTMLElement {
 
   _update() {
     if (!this._built) return;
+
+    // Refresh stream src when token changes (HA restart etc.)
+    const cameraState = this._hass.states[this._e('camera', 'camera')];
+    const token = cameraState && cameraState.attributes && cameraState.attributes.access_token;
+    const imgEl = this.shadowRoot.getElementById('stream');
+    if (imgEl && token && imgEl._sentinelToken !== token) {
+      imgEl._sentinelToken = token;
+      imgEl.src = this._streamUrl();
+    }
 
     // Battery
     const bat     = this._hass.states[this._e('sensor', 'battery')];
