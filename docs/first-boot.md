@@ -12,7 +12,7 @@
    |--------------|-------------------------------|
    | Hostname     | `sentinel`                    |
    | Enable SSH   | ✓ (password or public key)    |
-   | Username     | `pi`                          |
+   | Username     | `sentinel`                    |
    | Password     | (choose a strong password)    |
    | WiFi SSID    | your network name             |
    | WiFi password| your WiFi password            |
@@ -26,8 +26,8 @@
 Once the Pi boots (LED stops flashing continuously):
 
 ```bash
-ssh pi@sentinel.local
-# or: ssh pi@<ip-address>
+ssh sentinel@sentinel.local
+# or: ssh sentinel@<ip-address>
 ```
 
 If `sentinel.local` doesn't resolve, find the IP from your router's DHCP

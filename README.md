@@ -55,7 +55,7 @@ Flash **Raspberry Pi OS Lite 64-bit** to a microSD card using Raspberry Pi Image
 After SSH-ing into the Pi:
 
 ```bash
-git clone https://github.com/youruser/sentinel.git
+git clone https://github.com/arudyk/sentinel.git
 cd sentinel
 bash setup.sh
 ```
