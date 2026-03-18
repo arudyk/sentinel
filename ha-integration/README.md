@@ -13,7 +13,7 @@ Custom integration that exposes the Sentinel robot to Home Assistant.
 | `button.sentinel_turn_right` | Button | Turn right |
 | `button.sentinel_stop` | Button | Coast stop |
 | `button.sentinel_brake` | Button | Active brake |
-| `number.sentinel_speed_setting` | Number | Speed slider (0–100 %) |
+| `number.sentinel_speed` | Number | Speed slider (0–100 %) |
 | `sensor.sentinel_battery` | Sensor | Battery percentage |
 | `sensor.sentinel_battery_voltage` | Sensor | Battery voltage (V) |
 | `sensor.sentinel_speed` | Sensor | Current motor speed |
@@ -31,5 +31,5 @@ Custom integration that exposes the Sentinel robot to Home Assistant.
 
 ## Requirements
 
-- Sentinel must be reachable from the HA host (same LAN or via Tailscale).
+- Sentinel must be reachable from the HA host on the local network.
 - No extra Python packages required — uses `aiohttp` which HA bundles.

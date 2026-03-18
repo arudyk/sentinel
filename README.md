@@ -195,6 +195,58 @@ Valid actions: `forward`, `reverse`, `turn_left`, `turn_right`, `stop`, `brake`
 
 ---
 
+## Home Assistant Integration
+
+The `ha-integration/` directory contains a custom HA integration that exposes Sentinel as a first-class Home Assistant device. This is the recommended way to control the robot remotely — all traffic is proxied through HA so no direct network access to the Pi is required.
+
+### What it provides
+
+| Entity | Description |
+|--------|-------------|
+| `camera.sentinel_camera` | Live MJPEG stream (proxied through HA) |
+| `button.sentinel_forward/reverse/turn_left/turn_right` | Drive commands |
+| `button.sentinel_stop` / `button.sentinel_brake` | Stop / active brake |
+| `number.sentinel_speed` | Speed setting (0–100 %) |
+| `sensor.sentinel_battery` | Battery percentage |
+| `sensor.sentinel_battery_voltage` | Battery voltage (V) |
+| `sensor.sentinel_speed` | Current motor speed |
+| `sensor.sentinel_uptime` | Pi uptime (seconds) |
+| `binary_sensor.sentinel_camera` | Camera health |
+| `binary_sensor.sentinel_plugged_in` | External power connected |
+| `binary_sensor.sentinel_charging` | Battery charging |
+
+### Installation
+
+1. Copy `ha-integration/custom_components/sentinel/` into your HA `config/custom_components/` directory.
+2. Copy `ha-integration/www/sentinel-card.js` into your HA `config/www/` directory.
+3. Restart Home Assistant.
+4. Go to **Settings → Devices & Services → Add Integration**, search for **Sentinel**.
+5. Enter the robot's IP address and port (default `8080`).
+
+### Lovelace card
+
+Add the Sentinel card to any dashboard with:
+
+```yaml
+type: custom:sentinel-card
+entity_prefix: sentinel   # default, omit if unchanged
+```
+
+The card shows the live camera feed, a D-pad for driving, and a speed slider. Controls:
+
+| Input | Action |
+|-------|--------|
+| Arrow keys | Drive (↑ forward, ↓ reverse, ← / → turn) |
+| `Space` | Stop |
+| D-pad buttons | Touch / click and hold to move, release to stop |
+
+### Requirements
+
+- Sentinel must be reachable from the HA host on the local network.
+- The `www/` resource must be registered in HA. Go to **Settings → Dashboards → Resources → Add resource**, set URL to `/local/sentinel-card.js` and type to **JavaScript module**.
+
+---
+
 ## Project Structure
 
 ```
