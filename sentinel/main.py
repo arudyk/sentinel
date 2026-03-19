@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import Flask, Response, jsonify, request, send_from_directory
 
 from .battery_monitor import BatteryMonitor
+from .camera_control import CameraControl
 from .camera_stream import CameraStream
 from .config import load_config
 from .motor_controller import MotorController
@@ -34,10 +35,11 @@ def _pi_uptime() -> float:
 # App factory / startup
 # ---------------------------------------------------------------------------
 
-config = load_config()
-motors = MotorController(config.motor)
-camera = CameraStream(config.camera)
-battery = BatteryMonitor()
+config         = load_config()
+motors         = MotorController(config.motor)
+camera         = CameraStream(config.camera)
+battery        = BatteryMonitor()
+camera_control = CameraControl(config.camera_control)
 
 app = Flask(__name__, static_folder=None)
 
@@ -46,6 +48,7 @@ def _shutdown(signum, frame):
     logger.info("Received signal %d — shutting down", signum)
     camera.stop()
     motors.cleanup()
+    camera_control.cleanup()
     os._exit(0)
 
 
@@ -109,6 +112,32 @@ def command():
     return jsonify({"ok": True, "action": action, "speed": motors.speed})
 
 
+@app.post("/pan_tilt")
+def pan_tilt():
+    data = request.get_json(silent=True) or {}
+    errors = {}
+
+    pan  = data.get("pan")
+    tilt = data.get("tilt")
+
+    if pan is not None:
+        try:
+            camera_control.pan(int(pan))
+        except (ValueError, TypeError):
+            errors["pan"] = "must be an integer 0–180"
+
+    if tilt is not None:
+        try:
+            camera_control.tilt(int(tilt))
+        except (ValueError, TypeError):
+            errors["tilt"] = "must be an integer 0–180"
+
+    if errors:
+        return jsonify({"error": errors}), 400
+
+    return jsonify({"ok": True, "pan": camera_control.pan_angle, "tilt": camera_control.tilt_angle})
+
+
 @app.get("/status")
 def status():
     bat = battery.read()
@@ -116,6 +145,8 @@ def status():
         "action": motors.current_action,
         "speed": motors.speed,
         "camera_ok": camera.available,
+        "pan": camera_control.pan_angle,
+        "tilt": camera_control.tilt_angle,
         "uptime_s": round(_pi_uptime()),
         "battery_pct": round(bat.percentage, 1) if bat and bat.percentage is not None else None,
         "battery_v": round(bat.voltage, 2) if bat and bat.voltage is not None else None,

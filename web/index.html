@@ -23,6 +23,12 @@
     <section class="stream-container">
       <img id="stream" src="/stream" alt="Camera stream" draggable="false">
       <div id="stream-overlay" class="hidden">No signal</div>
+      <div class="ptz-overlay">
+        <button class="ptz-btn ptz-up"    data-pan="0"  data-tilt="-1" aria-label="Tilt up">▲</button>
+        <button class="ptz-btn ptz-down"  data-pan="0"  data-tilt="1"  aria-label="Tilt down">▼</button>
+        <button class="ptz-btn ptz-left"  data-pan="-1" data-tilt="0"  aria-label="Pan left">◀</button>
+        <button class="ptz-btn ptz-right" data-pan="1"  data-tilt="0"  aria-label="Pan right">▶</button>
+      </div>
     </section>
 
     <section class="controls">

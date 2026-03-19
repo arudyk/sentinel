@@ -38,10 +38,17 @@ class ServerConfig:
 
 
 @dataclass
+class CameraControlConfig:
+    i2c_bus: int = 1
+    i2c_addr: int = 64  # 0x40 — PCA9685 default
+
+
+@dataclass
 class Config:
     motor: MotorConfig = field(default_factory=MotorConfig)
     camera: CameraConfig = field(default_factory=CameraConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
+    camera_control: CameraControlConfig = field(default_factory=CameraControlConfig)
 
 
 def load_config(path: Path = _CONFIG_PATH) -> Config:
@@ -51,7 +58,8 @@ def load_config(path: Path = _CONFIG_PATH) -> Config:
     with open(path, "rb") as f:
         raw = tomllib.load(f)
 
-    motor = MotorConfig(**raw.get("motor", {}))
-    camera = CameraConfig(**raw.get("camera", {}))
-    server = ServerConfig(**raw.get("server", {}))
-    return Config(motor=motor, camera=camera, server=server)
+    motor          = MotorConfig(**raw.get("motor", {}))
+    camera         = CameraConfig(**raw.get("camera", {}))
+    server         = ServerConfig(**raw.get("server", {}))
+    camera_control = CameraControlConfig(**raw.get("camera_control", {}))
+    return Config(motor=motor, camera=camera, server=server, camera_control=camera_control)

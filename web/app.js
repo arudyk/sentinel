@@ -91,7 +91,38 @@
 
   const keysDown = new Set();
 
+  // PTZ key map: key code → [panDir, tiltDir]
+  const PTZ_KEY_MAP = {
+    KeyJ: [-1,  0],  // pan left
+    KeyL: [ 1,  0],  // pan right
+    KeyI: [ 0, -1],  // tilt up
+    KeyK: [ 0,  1],  // tilt down
+  };
+  const ptzTimers = {};
+
+  function startPtzKey(code) {
+    if (ptzTimers[code]) return;
+    const [panDir, tiltDir] = PTZ_KEY_MAP[code];
+    const tick = () => {
+      currentPan  = Math.max(0, Math.min(180, currentPan  + panDir  * PTZ_STEP_DEG));
+      currentTilt = Math.max(0, Math.min(180, currentTilt + tiltDir * PTZ_STEP_DEG));
+      sendPanTilt(currentPan, currentTilt);
+    };
+    tick();
+    ptzTimers[code] = setInterval(tick, PTZ_TICK_MS);
+  }
+
+  function stopPtzKey(code) {
+    clearInterval(ptzTimers[code]);
+    delete ptzTimers[code];
+  }
+
   document.addEventListener("keydown", e => {
+    if (PTZ_KEY_MAP[e.code]) {
+      e.preventDefault();
+      startPtzKey(e.code);
+      return;
+    }
     const action = KEY_MAP[e.code];
     if (!action || keysDown.has(e.code)) return;
     e.preventDefault();
@@ -101,6 +132,11 @@
   });
 
   document.addEventListener("keyup", e => {
+    if (PTZ_KEY_MAP[e.code]) {
+      e.preventDefault();
+      stopPtzKey(e.code);
+      return;
+    }
     const action = KEY_MAP[e.code];
     if (!action) return;
     e.preventDefault();
@@ -122,6 +158,55 @@
     }
   });
 
+  // ── Pan / tilt overlay ────────────────────────────────────────────────────
+
+  const PTZ_STEP_DEG  = 3;   // degrees per tick
+  const PTZ_TICK_MS   = 80;  // repeat interval while held
+
+  let currentPan  = 90;
+  let currentTilt = 90;
+
+  async function sendPanTilt(pan, tilt) {
+    try {
+      await fetch("/pan_tilt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pan, tilt }),
+      });
+    } catch (e) {
+      console.error("sendPanTilt failed:", e);
+    }
+  }
+
+  document.querySelectorAll(".ptz-btn").forEach(btn => {
+    const panDir  = parseInt(btn.dataset.pan,  10);
+    const tiltDir = parseInt(btn.dataset.tilt, 10);
+    let timer = null;
+
+    function tick() {
+      currentPan  = Math.max(0, Math.min(180, currentPan  + panDir  * PTZ_STEP_DEG));
+      currentTilt = Math.max(0, Math.min(180, currentTilt + tiltDir * PTZ_STEP_DEG));
+      sendPanTilt(currentPan, currentTilt);
+    }
+
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      btn.setPointerCapture(e.pointerId);
+      btn.classList.add("active");
+      tick();
+      timer = setInterval(tick, PTZ_TICK_MS);
+    });
+
+    function stop() {
+      clearInterval(timer);
+      timer = null;
+      btn.classList.remove("active");
+    }
+
+    btn.addEventListener("pointerup",     stop);
+    btn.addEventListener("pointercancel", stop);
+  });
+
   // ── Status polling ────────────────────────────────────────────────────────
 
   function formatUptime(seconds) {
@@ -138,6 +223,8 @@
 
       statusAction.textContent = data.action ?? "?";
       statusSpeed.textContent  = `${data.speed ?? 0}%`;
+      if (data.pan  != null) currentPan  = data.pan;
+      if (data.tilt != null) currentTilt = data.tilt;
       statusUptime.textContent = formatUptime(data.uptime_s ?? 0);
 
       if (data.camera_ok) {

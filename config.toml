@@ -19,3 +19,7 @@ rotation = 180
 host = "0.0.0.0"
 port = 8080
 debug = false
+
+[camera_control]
+i2c_bus  = 1
+i2c_addr = 64   # 0x40 — PCA9685 default I2C address
