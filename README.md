@@ -4,6 +4,21 @@ A tracked robot controlled via Home Assistant or a local web app, served by a Ra
 
 ---
 
+## Parts List
+
+| Part | Link |
+|------|------|
+| Raspberry Pi Zero 2 W | [Amazon](https://amzn.to/4rDZCXC) |
+| Tracked robot chassis | [Amazon](https://amzn.to/47b2CUe) |
+| L298N motor driver | [Amazon](https://amzn.to/3PdudOx) |
+| PiSugar 3 battery | [Amazon](https://amzn.to/4sfucrL) |
+| ArduCam pan-tilt platform (PCA9685) | [Amazon](https://amzn.to/4cUB5dt) |
+| ArduCam camera module | [Amazon](https://amzn.to/40EPqDu) |
+| ArduCam 30 cm ribbon cable | [Amazon](https://amzn.to/41f3Nyq) |
+| Female-to-female breadboard jumpers | [Amazon](https://amzn.to/40IowdR) |
+
+---
+
 ## Hardware
 
 | Component | Details |
