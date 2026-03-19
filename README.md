@@ -2,11 +2,7 @@
 
 A tracked robot controlled via Home Assistant or a local web app, served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera with pan-tilt from an ArduCam PCA9685 kit, battery powered by PiSugar 3.
 
-## Screenshots
-
 ![Sentinel robot](docs/robot-profile.jpg)
-
-![Sentinel HA mobile](docs/ha-mobile-screenshot.png)
 
 ---
 
@@ -285,6 +281,8 @@ Both fields are optional — send only `pan` or only `tilt` to move one axis. An
 The `ha-integration/` directory contains a custom HA integration that exposes Sentinel as a first-class Home Assistant device. This is the recommended way to control the robot remotely — all traffic is proxied through HA so no direct network access to the Pi is required.
 
 ![Sentinel Lovelace card](docs/ha-card-screenshot.png)
+
+![Sentinel HA mobile](docs/ha-mobile-screenshot.png)
 
 ### What it provides
 
