@@ -104,7 +104,7 @@ class CameraControl:
         if self._dry:
             _LOGGER.info("CameraControl dry-run: pan=%d", angle)
             return
-        self._write_servo(0, angle)
+        self._write_servo(1, angle)  # channel 1 = pan servo
 
     def tilt(self, angle: int) -> None:
         angle = max(0, min(180, int(angle)))
@@ -112,7 +112,7 @@ class CameraControl:
         if self._dry:
             _LOGGER.info("CameraControl dry-run: tilt=%d", angle)
             return
-        self._write_servo(1, angle)
+        self._write_servo(0, 180 - angle)  # channel 0 = tilt servo; inverted (higher PWM = camera up)
 
     def center(self) -> None:
         self.pan(90)

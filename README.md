@@ -1,6 +1,6 @@
 # Sentinel — Home Sentry Bot
 
-A tracked robot controlled via Home Assistant or a local web app, served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera, battery powered by PiSugar 3.
+A tracked robot controlled via Home Assistant or a local web app, served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera with pan-tilt from an ArduCam PCA9685 kit, battery powered by PiSugar 3.
 
 ---
 
@@ -13,6 +13,7 @@ A tracked robot controlled via Home Assistant or a local web app, served by a Ra
 | Motors | 2× DC motors (tracked chassis) |
 | Motor driver | L298N H-bridge |
 | Camera | Pi Camera v1 (OV5647) |
+| Pan-tilt | ArduCam pan-tilt kit SKU B0283 (PCA9685 16-ch PWM controller) |
 | Battery | PiSugar 3 |
 
 ---
@@ -44,6 +45,22 @@ A tracked robot controlled via Home Assistant or a local web app, served by a Ra
 >
 > **Ground**: Pi GND (pin 6) must be connected to L298N GND, otherwise GPIO signals have no reference and the motors will not respond.
 
+### ArduCam pan-tilt kit (PCA9685) → Raspberry Pi Zero 2 W
+
+| PCA9685 Wire | Physical Pin | Function |
+|--------------|--------------|----------|
+| VCC | Pin 4 | 5 V |
+| GND | Pin 6 | GND |
+| SDA | Pin 3 | GPIO 2 (I2C SDA) |
+| SCL | Pin 5 | GPIO 3 (I2C SCL) |
+
+| PCA9685 Channel | Servo |
+|-----------------|-------|
+| Channel 0 | Tilt servo (up / down) |
+| Channel 1 | Pan servo (left / right) |
+
+> **I2C address**: 0x40 (PCA9685 default). Configured in `config.toml` under `[camera_control]`.
+
 ---
 
 ## Software Setup
@@ -62,10 +79,11 @@ bash setup.sh
 
 `setup.sh` will:
 1. Install system packages (`picamera2`, `RPi.GPIO`, `python3-smbus2`, `i2c-tools`)
-2. Install and start `pisugar-server` for battery monitoring
-3. Create a Python virtualenv with `--system-site-packages`
-4. Install Flask
-5. Install and enable the `sentinel` systemd service
+2. Enable I2C in `/boot/firmware/config.txt` (required for pan-tilt)
+3. Install and start `pisugar-server` for battery monitoring
+4. Create a Python virtualenv with `--system-site-packages`
+5. Install Flask
+6. Install and enable the `sentinel` systemd service
 
 ### Accessing the web UI
 
@@ -75,6 +93,20 @@ bash setup.sh
 | mDNS hostname | `http://sentinel.local:8080` |
 
 For remote access, use the [Home Assistant integration](ha-integration/) — the HA camera proxy and controls work from anywhere HA is reachable.
+
+### Deploying updates
+
+From your dev machine (pushes to GitHub then pulls on the Pi):
+
+```bash
+bash deploy.sh
+```
+
+Override the target with env vars if needed:
+
+```bash
+SENTINEL_HOST=192.168.1.138 SENTINEL_USER=sentinel bash deploy.sh
+```
 
 ### Managing the service
 
@@ -125,6 +157,10 @@ framerate = 15
 jpeg_quality = 70
 rotation = 180      # 0, 90, 180, or 270
 
+[camera_control]
+i2c_bus  = 1
+i2c_addr = 64       # 0x40 — PCA9685 default
+
 [server]
 host = "0.0.0.0"
 port = 8080
@@ -137,7 +173,7 @@ debug = false
 
 ## Controls
 
-### Keyboard
+### Drive — keyboard
 
 | Key | Action |
 |-----|--------|
@@ -149,13 +185,28 @@ debug = false
 
 Hold the key to keep moving — releasing stops the robot.
 
-### Mobile
+### Drive — mobile
 
 Use the on-screen D-pad. Touch and hold to move, release to stop.
 
 ### Speed
 
 Adjust the speed slider (0–100%) before or during movement.
+
+### Camera pan-tilt — keyboard
+
+| Key | Action |
+|-----|--------|
+| `I` | Tilt up |
+| `K` | Tilt down |
+| `J` | Pan left |
+| `L` | Pan right |
+
+Hold to move continuously; release to stop at the current position.
+
+### Camera pan-tilt — mobile
+
+Tap and hold the transparent arrow buttons overlaid on the camera stream.
 
 ---
 
@@ -166,6 +217,7 @@ Adjust the speed slider (0–100%) before or during movement.
 | `GET` | `/` | Web UI |
 | `GET` | `/stream` | MJPEG live camera stream |
 | `POST` | `/command` | Send a drive command |
+| `POST` | `/pan_tilt` | Set camera pan and/or tilt angle |
 | `GET` | `/status` | Current state (JSON) |
 
 ### POST /command
@@ -178,6 +230,16 @@ curl -X POST http://sentinel.local:8080/command \
 
 Valid actions: `forward`, `reverse`, `turn_left`, `turn_right`, `stop`, `brake`
 
+### POST /pan_tilt
+
+```bash
+curl -X POST http://sentinel.local:8080/pan_tilt \
+  -H "Content-Type: application/json" \
+  -d '{"pan": 90, "tilt": 60}'
+```
+
+Both fields are optional — send only `pan` or only `tilt` to move one axis. Angles are 0–180°, center is 90°.
+
 ### GET /status
 
 ```json
@@ -185,6 +247,8 @@ Valid actions: `forward`, `reverse`, `turn_left`, `turn_right`, `stop`, `brake`
   "action": "forward",
   "speed": 75,
   "camera_ok": true,
+  "pan": 90,
+  "tilt": 90,
   "uptime_s": 120,
   "battery_pct": 85.0,
   "battery_v": 4.05,
@@ -209,6 +273,8 @@ The `ha-integration/` directory contains a custom HA integration that exposes Se
 | `button.sentinel_forward/reverse/turn_left/turn_right` | Drive commands |
 | `button.sentinel_stop` / `button.sentinel_brake` | Stop / active brake |
 | `number.sentinel_speed` | Speed setting (0–100 %) |
+| `number.sentinel_pan` | Camera pan angle (0–180°) |
+| `number.sentinel_tilt` | Camera tilt angle (0–180°) |
 | `sensor.sentinel_battery` | Battery percentage |
 | `sensor.sentinel_battery_voltage` | Battery voltage (V) |
 | `sensor.sentinel_speed` | Current motor speed |
@@ -234,13 +300,15 @@ type: custom:sentinel-card
 entity_prefix: sentinel   # default, omit if unchanged
 ```
 
-The card shows the live camera feed, a D-pad for driving, and a speed slider. Controls:
+The card shows the live camera feed, a D-pad for driving, a speed slider, and transparent pan-tilt arrows overlaid on the camera stream. Controls:
 
 | Input | Action |
 |-------|--------|
 | Arrow keys | Drive (↑ forward, ↓ reverse, ← / → turn) |
 | `Space` | Stop |
-| D-pad buttons | Touch / click and hold to move, release to stop |
+| `I` / `K` / `J` / `L` | Tilt up / down / pan left / right |
+| D-pad buttons | Touch / click and hold to drive, release to stop |
+| Camera overlay arrows | Touch / click and hold to pan-tilt, release to stop |
 
 ### Requirements
 
@@ -256,11 +324,13 @@ sentinel/
 ├── config.toml                 Central configuration (GPIO pins, camera, server)
 ├── requirements.txt            Python dependencies (Flask only)
 ├── setup.sh                    One-shot Pi setup script
+├── deploy.sh                   Deploy to robot (git push + pull on Pi + restart)
 │
 ├── sentinel/                   Python package
 │   ├── main.py                 Flask app and route definitions
 │   ├── motor_controller.py     L298N GPIO/PWM driver
 │   ├── camera_stream.py        picamera2 MJPEG streaming
+│   ├── camera_control.py       PCA9685 pan-tilt servo driver (I2C via smbus2)
 │   ├── battery_monitor.py      PiSugar 3 battery reader
 │   └── config.py               Loads config.toml into dataclasses
 │
