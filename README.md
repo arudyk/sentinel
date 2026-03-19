@@ -2,6 +2,12 @@
 
 A tracked robot controlled via Home Assistant or a local web app, served by a Raspberry Pi Zero 2 W. Two DC motors driven by an L298N H-bridge, live MJPEG camera stream via Pi Camera with pan-tilt from an ArduCam PCA9685 kit, battery powered by PiSugar 3.
 
+## Screenshots
+
+![Sentinel robot](docs/robot-profile.jpg)
+
+![Sentinel HA mobile](docs/ha-mobile-screenshot.png)
+
 ---
 
 ## Parts List
