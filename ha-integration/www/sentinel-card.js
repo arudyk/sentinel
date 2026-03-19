@@ -87,6 +87,38 @@ class SentinelCard extends HTMLElement {
           display: block;
         }
 
+        /* ── Pan/tilt overlay ── */
+        .ptz-overlay {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+        .ptz-btn {
+          position: absolute;
+          pointer-events: all;
+          background: rgba(0,0,0,0.35);
+          border: 1px solid rgba(255,255,255,0.18);
+          border-radius: 6px;
+          color: rgba(255,255,255,0.8);
+          font-size: 1.1rem;
+          cursor: pointer;
+          touch-action: manipulation;
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.08s;
+        }
+        .ptz-btn:active, .ptz-btn.active {
+          background: rgba(35,134,54,0.7);
+          border-color: rgba(46,160,67,0.8);
+        }
+        .ptz-up    { top: 8px;    left: 50%; transform: translateX(-50%); }
+        .ptz-down  { bottom: 30px; left: 50%; transform: translateX(-50%); }
+        .ptz-left  { left: 8px;   top: 50%;  transform: translateY(-50%); }
+        .ptz-right { right: 8px;  top: 50%;  transform: translateY(-50%); }
+
         /* ── Overlay status bar on the camera ── */
         .status-bar {
           position: absolute;
@@ -191,6 +223,12 @@ class SentinelCard extends HTMLElement {
       <div class="card">
         <div class="stream-wrap">
           <img id="stream" alt="Camera">
+          <div class="ptz-overlay">
+            <button class="ptz-btn ptz-up"    data-pan="0"  data-tilt="-1">▲</button>
+            <button class="ptz-btn ptz-down"  data-pan="0"  data-tilt="1">▼</button>
+            <button class="ptz-btn ptz-left"  data-pan="-1" data-tilt="0">◀</button>
+            <button class="ptz-btn ptz-right" data-pan="1"  data-tilt="0">▶</button>
+          </div>
           <div class="status-bar">
             <span id="status-action">idle</span>
             <span id="status-battery" class="battery">–</span>
@@ -238,6 +276,39 @@ class SentinelCard extends HTMLElement {
       btn.addEventListener('pointercancel', () => btn.classList.remove('active'));
     });
 
+    // Pan/tilt overlay — hold to move
+    const PTZ_STEP = 3;
+    const PTZ_MS   = 80;
+    this._pan  = 90;
+    this._tilt = 90;
+    this.shadowRoot.querySelectorAll('.ptz-btn').forEach(btn => {
+      const panDir  = parseInt(btn.dataset.pan,  10);
+      const tiltDir = parseInt(btn.dataset.tilt, 10);
+      let timer = null;
+      const tick = () => {
+        this._pan  = Math.max(0, Math.min(180, this._pan  + panDir  * PTZ_STEP));
+        this._tilt = Math.max(0, Math.min(180, this._tilt + tiltDir * PTZ_STEP));
+        this._hass.callService('number', 'set_value', {
+          entity_id: this._e('number', 'pan'),
+          value: this._pan,
+        });
+        this._hass.callService('number', 'set_value', {
+          entity_id: this._e('number', 'tilt'),
+          value: this._tilt,
+        });
+      };
+      btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        btn.setPointerCapture(e.pointerId);
+        btn.classList.add('active');
+        tick();
+        timer = setInterval(tick, PTZ_MS);
+      });
+      const stop = () => { clearInterval(timer); timer = null; btn.classList.remove('active'); };
+      btn.addEventListener('pointerup',     stop);
+      btn.addEventListener('pointercancel', stop);
+    });
+
     // Speed slider
     const slider = this.shadowRoot.getElementById('speed-slider');
     slider.addEventListener('input', () => {
@@ -258,6 +329,26 @@ class SentinelCard extends HTMLElement {
 
   _onKeyDown(e) {
     if (e.repeat) return;
+    // PTZ keys — hold to move
+    const ptzMap = { j: [-1, 0], l: [1, 0], i: [0, -1], k: [0, 1] };
+    const ptz = ptzMap[e.key.toLowerCase()];
+    if (ptz) {
+      e.preventDefault();
+      if (!this._ptzTimers) this._ptzTimers = {};
+      if (this._ptzTimers[e.key]) return;
+      const [panDir, tiltDir] = ptz;
+      const PTZ_STEP = 3, PTZ_MS = 80;
+      const tick = () => {
+        this._pan  = Math.max(0, Math.min(180, this._pan  + panDir  * PTZ_STEP));
+        this._tilt = Math.max(0, Math.min(180, this._tilt + tiltDir * PTZ_STEP));
+        this._hass.callService('number', 'set_value', { entity_id: this._e('number', 'pan'),  value: this._pan });
+        this._hass.callService('number', 'set_value', { entity_id: this._e('number', 'tilt'), value: this._tilt });
+      };
+      tick();
+      this._ptzTimers[e.key] = setInterval(tick, PTZ_MS);
+      return;
+    }
+    // Drive keys
     const map = { ArrowUp: 'forward', ArrowLeft: 'turn_left', ArrowDown: 'reverse', ArrowRight: 'turn_right', ' ': 'stop' };
     const action = map[e.key];
     if (!action) return;
@@ -268,6 +359,14 @@ class SentinelCard extends HTMLElement {
   }
 
   _onKeyUp(e) {
+    // PTZ keys
+    if (this._ptzTimers && this._ptzTimers[e.key]) {
+      e.preventDefault();
+      clearInterval(this._ptzTimers[e.key]);
+      delete this._ptzTimers[e.key];
+      return;
+    }
+    // Drive keys
     const map = { ArrowUp: 'forward', ArrowLeft: 'turn_left', ArrowDown: 'reverse', ArrowRight: 'turn_right' };
     const action = map[e.key];
     if (!action) return;
@@ -301,6 +400,12 @@ class SentinelCard extends HTMLElement {
       batEl.textContent = `${icon} ${pct.toFixed(0)}%`;
       batEl.className = `battery${isCharging ? ' charging' : pct < 20 ? ' low' : ''}`;
     }
+
+    // Pan/tilt — sync from HA state
+    const panState  = this._hass.states[this._e('number', 'pan')];
+    const tiltState = this._hass.states[this._e('number', 'tilt')];
+    if (panState  && panState.state  !== 'unavailable') this._pan  = parseFloat(panState.state);
+    if (tiltState && tiltState.state !== 'unavailable') this._tilt = parseFloat(tiltState.state);
 
     // Speed slider — sync from HA state without fighting an active drag
     const speedState = this._hass.states[this._e('number', 'speed')];

@@ -6,6 +6,10 @@ import aiohttp
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_web,
+    async_get_clientsession,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -36,23 +40,13 @@ class SentinelCamera(SentinelEntity, Camera):
         return bool(self.coordinator.data and self.coordinator.data.get("camera_ok"))
 
     async def handle_async_mjpeg_stream(self, request):
-        """Proxy the live MJPEG stream directly from Sentinel."""
-        from aiohttp import web
-
-        response = web.StreamResponse()
-        response.content_type = "multipart/x-mixed-replace; boundary=frame"
-        await response.prepare(request)
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    self._stream_url,
-                    timeout=aiohttp.ClientTimeout(connect=5, total=None),
-                ) as upstream:
-                    async for chunk in upstream.content.iter_chunked(8192):
-                        await response.write(chunk)
-        except Exception:
-            pass
-        return response
+        """Proxy the live MJPEG stream through HA using the shared client session."""
+        websession = async_get_clientsession(self.hass)
+        stream_coro = websession.get(
+            self._stream_url,
+            timeout=aiohttp.ClientTimeout(connect=5, total=None),
+        )
+        return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

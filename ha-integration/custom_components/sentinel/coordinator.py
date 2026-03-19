@@ -42,6 +42,23 @@ class SentinelCoordinator(DataUpdateCoordinator):
         except Exception as err:
             raise UpdateFailed(f"Cannot reach Sentinel at {self.base_url}: {err}") from err
 
+    async def set_pan_tilt(self, pan: int | None = None, tilt: int | None = None) -> None:
+        payload: dict = {}
+        if pan is not None:
+            payload["pan"] = pan
+        if tilt is not None:
+            payload["tilt"] = tilt
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.base_url}/pan_tilt",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    resp.raise_for_status()
+        except Exception as err:
+            raise HomeAssistantError(f"Sentinel is unavailable: {err}") from err
+
     async def send_command(self, action: str, speed: int | None = None) -> None:
         payload: dict = {"action": action}
         if speed is not None:

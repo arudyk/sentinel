@@ -18,7 +18,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: SentinelCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SentinelSpeedNumber(coordinator)])
+    async_add_entities([
+        SentinelSpeedNumber(coordinator),
+        SentinelPanNumber(coordinator),
+        SentinelTiltNumber(coordinator),
+    ])
 
 
 class SentinelSpeedNumber(SentinelEntity, RestoreEntity, NumberEntity):
@@ -49,4 +53,64 @@ class SentinelSpeedNumber(SentinelEntity, RestoreEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.coordinator.speed_setting = int(value)
+        self.async_write_ha_state()
+
+
+class SentinelPanNumber(SentinelEntity, NumberEntity):
+    """Pan angle for the camera (0–180°)."""
+
+    _attr_name = "Pan"
+    _attr_icon = "mdi:pan-horizontal"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 180
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "°"
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, coordinator: SentinelCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_pan"
+        self._attr_native_value = float(
+            coordinator.data.get("pan", 90) if coordinator.data else 90
+        )
+
+    @property
+    def native_value(self) -> float:
+        if self.coordinator.data and "pan" in self.coordinator.data:
+            return float(self.coordinator.data["pan"])
+        return self._attr_native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self._attr_native_value = value
+        await self.coordinator.set_pan_tilt(pan=int(value))
+        self.async_write_ha_state()
+
+
+class SentinelTiltNumber(SentinelEntity, NumberEntity):
+    """Tilt angle for the camera (0–180°)."""
+
+    _attr_name = "Tilt"
+    _attr_icon = "mdi:pan-vertical"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 180
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "°"
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, coordinator: SentinelCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_tilt"
+        self._attr_native_value = float(
+            coordinator.data.get("tilt", 90) if coordinator.data else 90
+        )
+
+    @property
+    def native_value(self) -> float:
+        if self.coordinator.data and "tilt" in self.coordinator.data:
+            return float(self.coordinator.data["tilt"])
+        return self._attr_native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self._attr_native_value = value
+        await self.coordinator.set_pan_tilt(tilt=int(value))
         self.async_write_ha_state()
