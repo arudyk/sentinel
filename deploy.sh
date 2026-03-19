@@ -25,7 +25,7 @@ echo ""
 # ── 2. Pull on robot and restart service ─────────────────────────────────────
 
 echo "[2/3] Pulling on robot and restarting service..."
-ssh "${REMOTE}" "cd ~/sentinel && git pull && sudo systemctl restart sentinel"
+ssh "${REMOTE}" "cd ~/sentinel && git fetch origin && git checkout -B main origin/main && sudo systemctl restart sentinel"
 echo ""
 
 # ── 3. Verify service is running ─────────────────────────────────────────────
